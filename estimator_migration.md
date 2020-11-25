@@ -56,7 +56,7 @@ For information on configuring and managing Azure ML environments, see:
 #### Datasets
 If you are using an Azure ML dataset for training, pass the dataset as an argument to your script using the `arguments` parameter. By doing so, you will get the data path (mounting point or download path) in your training script via arguments.
 
-The following example configures a training job where the dataset, `mnist_ds`, will get mounted on the remote compute.
+The following example configures a training job where the FileDataset, `mnist_ds`, will get mounted on the remote compute.
 ```python
 src = ScriptRunConfig(source_directory='.',
                       script='train.py',
