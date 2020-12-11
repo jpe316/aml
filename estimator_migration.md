@@ -1,17 +1,20 @@
 # Estimator to ScriptRunConfig migration guide
 
-Up until now, there have been multiple methods for configuring a training job in Azure Machine Learning via the SDK, including Estimators, ScriptRunConfig, and the lower-level RunConfiguration, which have generated a lot of ambiguity and inconsistency for users. To address this, we are simplifying the job configuration process in Azure ML to converge on using ScriptRunConfig as the recommended option for specifying training jobs. Estimators are deprecated with the 1.19 release of the Python SDK. You should also generally avoid explicitly instantiating a RunConfiguration object yourself, and instead configure your job using the ScriptRunConfig class.
+Up until now, there have been multiple methods for configuring a training job in Azure Machine Learning via the SDK, including Estimators, ScriptRunConfig, and the lower-level RunConfiguration, which have generated a lot of ambiguity and inconsistency for users. To address this, we are simplifying the job configuration process in Azure ML to converge on using ScriptRunConfig as the recommended option for specifying training jobs. 
 
-**To migrate to ScriptRunConfig from Estimators, please make sure you are using >= v1.15 of the Python SDK.**
+Estimators are deprecated with the 1.19 release of the Python SDK. You should also generally avoid explicitly instantiating a RunConfiguration object yourself, and instead configure your job using the ScriptRunConfig class.
+
+> [!IMPORTANT]
+> To migrate to ScriptRunConfig from Estimators, make sure you are using >= v1.15 of the Python SDK.**
 
 ## Documentation & samples
-For information on using ScriptRunConfig, you can refer to the following documentation:
+For information on using ScriptRunConfig, refer to the following documentation:
 * [Configure and submit training runs](https://docs.microsoft.com/azure/machine-learning/how-to-set-up-training-targets)
 * [Configuring PyTorch training runs](https://docs.microsoft.com/azure/machine-learning/how-to-train-pytorch)
 * [Configuring TensorFlow training runs](https://docs.microsoft.com/azure/machine-learning/how-to-train-tensorflow)
 * [Configuring scikit-learn training runs](https://docs.microsoft.com/azure/machine-learning/how-to-train-scikit-learn)
 
-In addition, you can refer to the following samples & tutorials:
+In addition, refer to the following samples & tutorials:
 * [Azure/MachineLearningNotebooks](https://github.com/Azure/MachineLearningNotebooks/tree/master/how-to-use-azureml/ml-frameworks)
 * [Azure/azureml-examples](https://github.com/Azure/azureml-examples)
 
