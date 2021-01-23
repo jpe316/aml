@@ -85,8 +85,7 @@ compute:
 ```
 
 TO DO:
-- figure out where to get ProcessCount from the user (needed for Azure ML to create the hostfile), versus num replicas ? in k8s
-
+- Need to know the # of processes per node that user wants in order to create the hostfile -- processCount? slotsPerWorker? ProcessesPerNode?
 ## PyTorch job
 
 ### PyTorch job on AmlCompute
