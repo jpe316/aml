@@ -31,7 +31,7 @@ compute:
   instance_count: 4
 ```
 
-### MPI job on AmlCompute using `horovodrun`
+**MPI job on AmlCompute using `horovodrun`**
 The Horovod framework provides a convenient, Open MPI-based wrapper called `horovodrun` for users to launch their distributed Horovod jobs. Using `horovodrun` is simpler to configure, and we can recommend this path to users who do not need more fine-grained MPI control.
 
 ```yaml
@@ -96,7 +96,7 @@ For PyTorch jobs, Azure ML will set the `MASTER_ADDR`, `MASTER_PORT`, and `NODE_
 
 ```yaml
 name: sample-pytorch-job
-type: PyTorchJob
+type: PytorchJob
 experiment_name: distr-pytorch-mnist
 worker:
   spec:
@@ -117,7 +117,7 @@ compute:
 
 ```yaml
 name: sample-pytorch-job-k8s
-type: PyTorchJob
+type: PytorchJob
 experiment_name: distr-pytorch-mnist
 worker:
   spec:
@@ -132,4 +132,88 @@ compute:
   target: my-aks-clutser
   instance_count: 4
 ```
+
 ## TensorFlow job
+
+If training with TensorFlow 2 MultiWorkerMirroredStrategy, the user will provide the worker spec. If using the ParameterServerStrategy, the user will provide the parameter server and worker specs.
+
+For TensorFlow jobs, Azure ML will set the `TF_CONFIG` environment variable which is required for distributed TF training.
+
+### TensorFlow job on AmlCompute
+
+**MultiWorkerMirroredStrategy:**
+
+```yaml
+name: sample-tf-job
+type: TensorflowJob
+experiment_name: distr-tf-mnist
+worker:
+  num_replicas: 4
+  spec:
+    command: python train.py
+    code:
+      path: ./src
+    environment: azureml:tensorflow-2.3:1
+compute:
+  type: AmlCompute
+  target: gpu-cluster
+  instance_count: 4
+```
+
+**ParameterServerStrategy:**
+
+```yaml
+name: sample-tf-job
+type: TensorflowJob
+experiment_name: distr-tf-mnist
+parameter_server:
+  num_replicas: 2
+  spec:
+    command: python train.py
+    code:
+      path:
+        ./src
+    environment: azureml:tensorflow-2.3:1
+worker:
+  num_replicas: 4
+  spec:
+    command: python train.py
+    code:
+      path: ./src
+    environment: azureml:tensorflow-2.3:1
+compute:
+  type: AmlCompute
+  target: gpu-cluster
+  instance_count: 4
+```
+
+
+### TensorFlow job on Amlk8s
+
+```yaml
+name: sample-tf-job-k8s
+type: TensorflowJob
+experiment_name: distr-tf-mnist
+parameter_server:
+  num_replicas: 2
+  spec:
+    command: python train.py
+    code:
+      path:
+        ./src
+    environment: azureml:tensorflow-2.3:1
+  resource_limits:
+    cpu: 1
+worker:
+  num_replicas: 4
+  spec:
+    command: python train.py
+    code:
+      path: ./src
+    environment: azureml:tensorflow-2.3:1
+  resource_limits:
+    nvidia.com/gpu: 4
+compute:
+  type: AmlCompute
+  target: gpu-cluster
+```
