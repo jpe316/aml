@@ -31,6 +31,31 @@ compute:
   instance_count: 4
 ```
 
+Open question:
+
+For AmlCompute, could we just exclude the worker section?
+
+```yaml
+name: sample-mpi-job
+type: MpiJob
+experiment_name: pytorch-mnist-horovod
+launcher:
+  spec:
+    command: >-
+      mpirun -np 16 --hostfile $AZUREML_MPI_HOSTFILE
+      -bind-to none -map-by slot -x NCCL_DEBUG=INFO -x LD_LIBRARY_PATH -x PATH
+      -mca pml ob1 -mca btl ^openib
+      python train.py
+    code:
+      path: ./src
+    environment: azureml:pytorch-1.7:1
+process_count: 16
+compute:
+  type: AmlCompute
+  target: nc24-cluster
+  instance_count: 4
+```
+
 **MPI job on AmlCompute using `horovodrun`**
 
 The Horovod framework provides a convenient, Open MPI-based wrapper called `horovodrun` for users to launch their distributed Horovod jobs. Using `horovodrun` is simpler to configure, and we can recommend this path to users who do not need more fine-grained MPI control.
