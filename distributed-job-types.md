@@ -15,7 +15,7 @@ experiment_name: pytorch-mnist-horovod
 launcher:
   spec:
     command: >-
-      mpirun -np 16 --hostfile AZUREML_MPI_HOSTFILE
+      mpirun -np 16 --hostfile $AZUREML_MPI_HOSTFILE
       -bind-to none -map-by slot -x NCCL_DEBUG=INFO -x LD_LIBRARY_PATH -x PATH
       -mca pml ob1 -mca btl ^openib
       python train.py
@@ -42,7 +42,7 @@ experiment_name: pytorch-mnist-horovod
 launcher:
   spec:
     command: >-
-      horovodrun -np 16 --hostfile AZUREML_MPI_HOSTFILE python train.py
+      horovodrun -np 16 --hostfile $AZUREML_MPI_HOSTFILE python train.py
     code:
       path: ./src
     environment: azureml:pytorch-1.7:1
@@ -102,7 +102,7 @@ worker:
   spec:
     command: >-
       python -m torch.distributed.launch --nproc_per_node 4 --nnodes 4
-      --node_rank NODE_RANK --master_addr MASTER_ADDR --master_port MASTER_PORT --use_env
+      --node_rank $NODE_RANK --master_addr $MASTER_ADDR --master_port $MASTER_PORT --use_env
       python train.py
     code:
       path: ./src
