@@ -100,6 +100,7 @@ launcher:
       cpu: 1
       memory: 2Gi
 worker:
+  num_replicas: 4
   spec:
     environment: azureml:pytorch-1.7:1
     resource_limits:
@@ -145,6 +146,7 @@ name: sample-pytorch-job-k8s
 type: PytorchJob
 experiment_name: distr-pytorch-mnist
 worker:
+  num_replicas: 4
   spec:
     command: python train.py
     code:
@@ -155,7 +157,6 @@ worker:
 compute:
   type: AksCluster
   target: my-aks-clutser
-  instance_count: 4
 ```
 
 ## TensorFlow job
