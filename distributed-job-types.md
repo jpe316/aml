@@ -32,6 +32,7 @@ compute:
 ```
 
 **MPI job on AmlCompute using `horovodrun`**
+
 The Horovod framework provides a convenient, Open MPI-based wrapper called `horovodrun` for users to launch their distributed Horovod jobs. Using `horovodrun` is simpler to configure, and we can recommend this path to users who do not need more fine-grained MPI control.
 
 ```yaml
