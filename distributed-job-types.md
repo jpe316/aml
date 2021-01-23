@@ -78,7 +78,7 @@ worker:
   spec:
     environment: azureml:pytorch-1.7:1
     resource_limits:
-      nvidia.com/gpu: 4
+      gpu: 4
 compute:
   type: AksCompute
   target: my-aks-cluster
@@ -126,7 +126,7 @@ worker:
       path: ./src
     environment: azureml:pytorch-1.7:1
     resource_limits:
-      nvidia.com/gpu: 4
+      gpu: 4
 compute:
   type: AksCluster
   target: my-aks-clutser
@@ -212,7 +212,7 @@ worker:
       path: ./src
     environment: azureml:tensorflow-2.3:1
   resource_limits:
-    nvidia.com/gpu: 4
+    gpu: 4
 compute:
   type: AmlCompute
   target: gpu-cluster
