@@ -6,31 +6,31 @@ For fine-grained control, the user provides the MPI launch command (e.g. `mpirun
 For MPI jobs, Azure ML will set an environment variable `AZUREML_MPI_HOSTFILE` that has the path to the MPI hostfile created by Azure ML.
 
 ```yml
-
-command: >-
-  mpirun -np 16 --hostfile $AZUREML_MPI_HOSTFILE
-  -bind-to none -map-by slot -x NCCL_DEBUG=INFO -x LD_LIBRARY_PATH -x PATH
-  -mca pml ob1 -mca btl ^openib
-  python train.py
-code:
-  path: ./src
-environment: 
-  docker:
-    image: docker.io/pytorch
-distributed:
-  mpi:
-    worker:
-      environment:
-        docker:
-          image: docker.io/pytorch    
+type: mpi
+launcher:
+  command: >-
+    mpirun -np 16 --hostfile $AZUREML_MPI_HOSTFILE
+    -bind-to none -map-by slot -x NCCL_DEBUG=INFO -x LD_LIBRARY_PATH -x PATH
+    -mca pml ob1 -mca btl ^openib
+    python train.py
+  code:
+    path: ./src
+  environment: 
+    docker:
+      image: docker.io/pytorch
+worker:
+  count: 4
+  slots_per: 4 # optional, workers have defaults
+  environment:
+    docker:
+      image: docker.io/pytorch
 compute:
   infrastructure: managed
   instance_type: Standard_NC24
-  instance_count: 4
 ```
 
 ### MPI job - launcher = worker env
-```yaml
+```yml
 command: >-
   mpirun -np 16 --hostfile $AZUREML_MPI_HOSTFILE
   -bind-to none -map-by slot -x NCCL_DEBUG=INFO -x LD_LIBRARY_PATH -x PATH
@@ -44,7 +44,10 @@ environment:
 compute:
   infrastructure: managed
   instance_type: Standard_NC24
-  instance_count: 4
+distributed:
+  mpi:
+    worker:
+      count: 4
 ```
 
 ### MPI job = `horovodrun`
@@ -52,51 +55,46 @@ compute:
 The Horovod framework provides a convenient, Open MPI-based wrapper called `horovodrun` for users to launch their distributed Horovod jobs. Using `horovodrun` is simpler to configure, and we can recommend this path to users who do not need more fine-grained MPI control.
 
 ```yaml
+type: mpi
 launcher:
-  spec:
-    command: >-
-      horovodrun -np 16 --hostfile $AZUREML_MPI_HOSTFILE python train.py
-    code:
-      path: ./src
-    environment: 
-      docker:
-        image: docker.io/pytorch
+  command: >-
+    horovodrun -np 16 --hostfile $AZUREML_MPI_HOSTFILE python train.py
+  code:
+    path: ./src
+  environment: 
+    docker:
+      image: docker.io/pytorch
 worker:
-  spec:
-    environment: 
-      docker:
-        image: docker.io/pytorch
+  count: 4
 compute:
   infrastructure: managed
   instance_type: Standard_NC24
-  instance_count: 4
 ```
 
 ### MPI job - K8s
 For jobs running on k8s, users can specify additional configurations that are relevant to k8s training, such as specifying resource limits.
 
 ```yaml
-command: >-
-  mpirun -np 16 --allow-run-as-root -bind-to none -map-by slot
-  -x LD_LIBRARY_PATH -x PATH -mca pml ob1 -mca btl ^openib
-  python train.py
-code:
-  path: ./src
+type: mpi
 environment: 
   docker:
     image: docker.io/pytorch
-resource_limits:
-  cpu: 1
-  memory: 2Gi
-distributed:
-  mpi:
-    replicas: 4
-    worker:
-      environment: 
-        docker:
-          image: docker.io/pytorch
-      resource_limits:
-        gpu: 4
+code:
+  path: ./src
+launcher:
+  command: >-
+    mpirun -np 16 --allow-run-as-root -bind-to none -map-by slot
+    -x LD_LIBRARY_PATH -x PATH -mca pml ob1 -mca btl ^openib
+    python train.py
+  resources:
+    limits:
+      cpu: 1
+      memory: 2Gi
+worker:
+  count: 4
+  resources:
+    limits:
+      gpu: 4
 compute:
   infrastructure: k8s
   target: my-aks-cluster
@@ -114,6 +112,7 @@ PyTorch provides a distributed launch utility `torch.distributed.launch`, which 
 For PyTorch jobs, Azure ML will set the `MASTER_ADDR`, `MASTER_PORT`, and `NODE_RANK` environment variables, which the user can reference in their launch command. The launch utility will then set the `WORLD_SIZE`, and `RANK` and `LOCAL_RANK` environment variables for each subprocess it starts (these environment variables are needed for PyTorch).
 
 ```yaml
+type: pytorch
 command: >-
   python -m torch.distributed.launch --nproc_per_node 4 --nnodes 4
   --node_rank $NODE_RANK --master_addr $MASTER_ADDR --master_port $MASTER_PORT --use_env
@@ -123,17 +122,17 @@ code:
 environment: 
   docker:
     image: docker.io/pytorch
+worker:
+  count: 4
 compute:
   infrastructure: managed
   instance_type: Standard_NC24
-distributed:
-  pytorch:
-    worker_count: 4
 ```
 
 ### PyTorch job on k8s
 
 ```yml
+type: pytorch
 command: python train.py --language $LANGUAGE
 code:
   path: ./src
@@ -145,12 +144,10 @@ compute:
   target: my-aks-cluster
 environment_variables:
   LANGUAGE: en-us
-distributed:
-  pytorch:
-    worker:
-      count: 4
-      resource_limits:
-        gpu: 4
+worker:
+  count: 4
+  resource_limits:
+    gpu: 4
 ```
 
 ## TensorFlow jobs
@@ -164,6 +161,7 @@ For TensorFlow jobs, Azure ML will set the `TF_CONFIG` environment variable whic
 **MultiWorkerMirroredStrategy:**
 
 ```yml
+type: tensorflow
 command: python train.py
 code:
   path: ./src
@@ -174,16 +172,14 @@ compute:
   type: managed
   target: gpu-cluster
   instance_count: 4
-distributed:
-  tensorflow:
-    worker: 
-      count: 4
+worker: 
+  count: 4
 ```
 
 ### Tensorflow job - parameter server + workers
 
-```yaml
-
+```yml
+type: tensorflow
 command: python train.py --magic $MAGIC
 code:
   path:
@@ -193,24 +189,22 @@ environment:
     image: docker.io/tensorflow
 environment_variables:
   MAGIC: number
-distributed:
-  tensorflow:
-    worker: 
-      count: 2
-      resource_limits:
-        cpu: 4
-    parameter_server:
-      count: 4
-      environment:
-        docker:
-          image: docker.io/python
-      resource_limits:
-        gpu: 4
-        memory: 2Gi
-      environment_variables:
-        MAGIC: newnumber
+worker: 
+  count: 2
+  resource_limits:
+    cpu: 4
+parameter_server:
+  count: 4
+  environment:
+    docker:
+      image: docker.io/python
+  resource_limits:
+    gpu: 4
+    memory: 2Gi
+  environment_variables:
+    MAGIC: newnumber
 compute:
-    infrastructure: managed
-    target: gpu-cluster
+  infrastructure: managed
+  target: gpu-cluster
 ```
 
